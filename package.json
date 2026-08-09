@@ -1,0 +1,25 @@
+{
+  "name": "mail-buddy",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Mail Buddy - self-hostable email template manager and delivery API, compiled to a single executable binary.",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "api:dev": "bun --filter mail-buddy-api dev",
+    "api:start": "bun --filter mail-buddy-api start",
+    "api:compile": "bun --filter mail-buddy-api compile",
+    "api:test": "bun --filter mail-buddy-api test",
+    "web:dev": "bun --filter mail-buddy-web dev",
+    "web:build": "bun --filter mail-buddy-web build",
+    "sdk:build": "bun --filter mail-buddy-sdk build",
+    "sdk:test": "bun --filter mail-buddy-sdk test"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.14",
+    "typescript": "^7.0.2"
+  }
+}

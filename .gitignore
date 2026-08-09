@@ -1,0 +1,14 @@
+node_modules/
+dist/
+apps/api/src/webAssets.generated.ts
+*.log
+.DS_Store
+mail-buddy
+mail-buddy.exe
+uploads/
+.test-uploads/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+.env

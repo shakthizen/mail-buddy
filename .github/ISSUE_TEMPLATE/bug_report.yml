@@ -1,0 +1,43 @@
+name: Bug report
+description: Something isn't working as documented in project-plan.md or README.md
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please don't use this for security vulnerabilities - see [SECURITY.md](../../SECURITY.md) instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include request payloads / curl commands / SDK calls where relevant.
+      placeholder: |
+        1. Call POST /api/send with ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: apps/api, apps/web, packages/sdk, or the compiled binary?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Git commit hash, or SDK version from package.json, if known.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Server console output (LOG_LEVEL=debug helps), browser console errors, etc.
+      render: shell

@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an addition or change to Mail Buddy
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before requesting audience/list-management features (contacts, segments, campaigns), note that this is an intentional non-goal - see project-plan.md section 1.5. Mail Buddy stays a template engine + send API, not a full marketing platform.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that isn't possible (or is awkward) today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you expect this to work? API shape, UI changes, etc. if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

@@ -1,0 +1,48 @@
+name: Publish SDK to npm
+
+# Scaffolded per project-plan.md section 9 - intentionally NOT wired to run
+# automatically. Publishing a real version to the public npm registry is a
+# deliberate, manual release step (npm versions can't be unpublished after
+# 72h), not something that should happen as a side effect of pushing a tag
+# without a human deciding to. To use this for real:
+#   1. Remove the `if: false` guard below.
+#   2. Add an NPM_TOKEN secret (npm access token with publish rights) to the
+#      repository's Actions secrets.
+#   3. Tag a release as `sdk-v*` (e.g. `sdk-v0.1.0`) to trigger it.
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: false # remove this line when ready to actually publish - see note above
+    defaults:
+      run:
+        working-directory: packages/sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun test
+
+      - name: Build
+        run: bun run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,28 @@
+{
+  "name": "mail-buddy-api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Mail Buddy Elysia API server - compiles to a single executable binary with the dashboard SPA embedded.",
+  "type": "module",
+  "scripts": {
+    "generate:web-assets": "bun run scripts/generate-web-assets.ts",
+    "dev": "bun run generate:web-assets && bun run --watch src/index.ts",
+    "start": "bun run generate:web-assets && bun run src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "compile": "bun run generate:web-assets && bun build --compile --minify ./src/index.ts --outfile ../../mail-buddy",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "consola": "^3.4.2",
+    "drizzle-orm": "^0.45.2",
+    "elysia": "^1.4.29",
+    "envalid": "^8.2.0",
+    "handlebars": "^4.7.9",
+    "nodemailer": "^9.0.5"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.2",
+    "drizzle-kit": "^0.31.6"
+  }
+}
