@@ -1,0 +1,54 @@
+name: Tests
+
+# Runs on pull requests and pushes to any branch, so PRs get feedback before
+# merge (build-and-release.yml only triggers on push to main, which happens
+# *after* merge - this is the workflow that actually gates a PR). Its own
+# test job runs again as a release gate in build-and-release.yml too; that's
+# intentional belt-and-suspenders for the workflow that actually publishes
+# binaries, not redundant waste.
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  BUN_VERSION: 1.3.14
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # apps/api/src/webAssets.generated.ts is gitignored (a build artifact,
+      # like apps/web/dist itself) - it must exist before typecheck or the
+      # build step, since src/index.ts imports it. Order matters here.
+      - name: Build dashboard
+        run: bun run web:build
+
+      - name: Generate embedded web-asset manifest
+        run: bun --filter mail-buddy-api generate:web-assets
+
+      - name: Typecheck API
+        working-directory: apps/api
+        run: bunx tsc --noEmit
+
+      - name: Typecheck SDK
+        working-directory: packages/sdk
+        run: bunx tsc --noEmit
+
+      - name: Test API
+        run: bun run api:test
+
+      - name: Test SDK
+        run: bun run sdk:test

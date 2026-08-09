@@ -47,7 +47,9 @@ bun run api:test   # apps/api - unit + integration tests
 bun run sdk:test   # packages/sdk - unit tests
 ```
 
-Both should pass with zero failures before opening a PR. If you touch `apps/api/src/db/schema.ts`, regenerate migrations with `cd apps/api && bun run db:generate` and update `apps/api/src/db/migrations.ts` to import the new migration file (see the comment there for why - migrations are embedded as text imports so they end up inside the compiled single binary).
+Both should pass with zero failures before opening a PR - the `Tests` workflow (`.github/workflows/ci.yml`) runs the same checks automatically on every PR and will block merge otherwise. If you touch `apps/api/src/db/schema.ts`, regenerate migrations with `cd apps/api && bun run db:generate` and update `apps/api/src/db/migrations.ts` to import the new migration file (see the comment there for why - migrations are embedded as text imports so they end up inside the compiled single binary).
+
+Note that `apps/api/src/webAssets.generated.ts` is gitignored (it's a build artifact depending on `apps/web/dist`, also gitignored) - `bunx tsc --noEmit` in `apps/api` will fail on a fresh checkout until you run `bun run web:build && bun --filter mail-buddy-api generate:web-assets` at least once. `bun run api:dev`/`start`/`compile` all do this automatically; a bare typecheck does not.
 
 ## Commit messages and PRs
 
