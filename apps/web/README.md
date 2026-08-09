@@ -1,32 +1,12 @@
-# React + TypeScript + Vite
+# mail-buddy-web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The Mail Buddy admin dashboard - React + Vite + Tailwind. Built to static assets and embedded directly into the compiled `apps/api` binary at build time (see `apps/api/scripts/generate-web-assets.ts`); it's not deployed as a separate service.
 
-Currently, two official plugins are available:
+See the root [`README.md`](../../README.md) for the full project overview, and [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for dev setup.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Commands (run from the repo root)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+bun run web:dev    # dev server with hot reload, proxies /api and /uploads to http://localhost:3000
+bun run web:build  # production build -> dist/
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.

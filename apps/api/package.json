@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Mail Buddy Elysia API server - compiles to a single executable binary with the dashboard SPA embedded.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "generate:web-assets": "bun run scripts/generate-web-assets.ts",

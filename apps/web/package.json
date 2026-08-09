@@ -2,6 +2,8 @@
   "name": "mail-buddy-web",
   "private": true,
   "version": "0.0.0",
+  "description": "Mail Buddy admin dashboard - React + Vite + Tailwind, embedded into the compiled apps/api binary at build time.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",

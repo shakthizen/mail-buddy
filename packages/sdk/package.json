@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Typed Node.js client SDK for Mail Buddy - a self-hostable email template manager and delivery API.",
   "license": "MIT",
+  "author": "Shakthi Senavirathna",
+  "homepage": "https://github.com/shakthizen/mail-buddy/tree/main/packages/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/shakthizen/mail-buddy/issues"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

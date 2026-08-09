@@ -4,6 +4,15 @@
   "version": "0.1.0",
   "description": "Mail Buddy - self-hostable email template manager and delivery API, compiled to a single executable binary.",
   "license": "MIT",
+  "author": "Shakthi Senavirathna",
+  "homepage": "https://github.com/shakthizen/mail-buddy#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shakthizen/mail-buddy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shakthizen/mail-buddy/issues"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
