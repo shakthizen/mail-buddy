@@ -30,9 +30,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # apps/api/src/webAssets.generated.ts is gitignored (a build artifact,
-      # like apps/web/dist itself) - it must exist before typecheck or the
-      # build step, since src/index.ts imports it. Order matters here.
+      # Build artifacts that are gitignored but required by later steps -
+      # order matters. apps/web imports mail-buddy-sdk by its built dist/
+      # output (not source), so the SDK must be built before the dashboard.
+      # apps/api/src/index.ts imports the generated web-asset manifest, which
+      # itself depends on apps/web/dist existing. On a fresh checkout none of
+      # these exist yet, so skipping any step here fails typecheck/build with
+      # a "Cannot find module" error that looks unrelated to its real cause.
+      - name: Build SDK
+        run: bun run sdk:build
+
       - name: Build dashboard
         run: bun run web:build
 
