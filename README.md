@@ -133,10 +133,10 @@ Contributions are welcome - see [`CONTRIBUTING.md`](./CONTRIBUTING.md) for dev s
 ## Contributors
 
 <a href="https://github.com/shakthizen/mail-buddy/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=shakthizen/mail-buddy" alt="Contributors to shakthizen/mail-buddy" />
+  <img src="https://contrib.rocks/image?repo=shakthizen/mail-buddy" />
 </a>
 
-*This image is generated and refreshed automatically by [contrib.rocks](https://contrib.rocks) from the repository's contributor list - no manual updates needed.*
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## License
 

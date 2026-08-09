@@ -140,7 +140,10 @@ jobs:
           body: |
             Automatically built from the latest commit on `main`: ${{ github.sha }}
 
-            This is a rolling pre-release, not a stable version - its binaries are replaced on every push to `main`. For a fixed point-in-time build, download from this release now or build from that specific commit yourself.
-          prerelease: true
-          make_latest: false
+            This is a rolling build, not a manually cut version - its binaries are replaced on every push to `main`. For a fixed point-in-time build, download from this release now or build from that specific commit yourself.
+          # GitHub's API will not honor make_latest on a prerelease (drafts and
+          # prereleases can't be marked "latest"), so both have to change together
+          # for this release to actually show as "Latest" on the repo page.
+          prerelease: false
+          make_latest: true
           files: release/*
