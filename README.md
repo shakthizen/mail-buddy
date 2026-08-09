@@ -20,7 +20,7 @@ See [`project-plan.md`](./project-plan.md) for the full architecture, database s
 
 - **S3 storage driver**: documented in the plan and stubbed in code (`STORAGE_PROVIDER=s3` throws a clear "not implemented" error), but only the `local` driver actually works right now.
 - **Visual drag-and-drop template builder**: the editor is a raw HTML/Handlebars textarea with an unrendered live preview, not the block-based visual builder described in the plan's UI section. This is the single biggest remaining product gap.
-- **The SDK has not been published to npm yet.** The publish workflow (`.github/workflows/sdk-publish.yml`) is scaffolded but intentionally disabled (`if: false`) until someone deliberately enables it with an `NPM_TOKEN` secret.
+- **The SDK publish workflow** (`.github/workflows/sdk-publish.yml`) is wired up and triggers on `sdk-v*.*.*` tags, but still needs an `NPM_TOKEN` secret configured in the repository before it can actually publish - see "Releases" below.
 
 ## Quickstart
 
@@ -57,7 +57,7 @@ bun run compile   # -> ../../mail-buddy (regenerates the embedded dashboard mani
 
 The resulting binary is self-contained - it runs correctly from any working directory, with the dashboard and DB migrations both embedded. It lands around ~60-65MB: Bun always embeds its full runtime into `--compile` output, which is a fixed cost of the single-executable approach rather than something driven by this app's size (see `project-plan.md` section 8-A for detail).
 
-Or grab a prebuilt binary for Linux (x64/arm64), macOS (x64/arm64), or Windows (x64) from the [`latest` release](https://github.com/shakthizen/mail-buddy/releases/tag/latest), rebuilt automatically from `main` on every push by `.github/workflows/build-and-release.yml`.
+Or grab a prebuilt binary instead of compiling one yourself - see [Releases](#releases) below.
 
 #### Deployment footprint
 
@@ -125,6 +125,19 @@ apps/api        Elysia server - REST API, delivery worker, embeds apps/web/dist 
 apps/web        React (Vite + Tailwind) admin dashboard
 packages/sdk    mail-buddy-sdk - published Node.js client
 ```
+
+## Releases
+
+Two independent things get versioned and released here - the server/dashboard binary and the SDK - each with its own tags and CI workflow.
+
+**App binary** ([`build-and-release.yml`](.github/workflows/build-and-release.yml)):
+- Pushing a `v*.*.*` tag (e.g. `v0.2.0`) publishes a permanent, versioned [GitHub Release](https://github.com/shakthizen/mail-buddy/releases) with binaries for Linux (x64/arm64), macOS (x64/arm64), and Windows (x64), and marks it as the repo's "Latest release".
+- Every push to `main` also updates a rolling [`latest` pre-release](https://github.com/shakthizen/mail-buddy/releases/tag/latest) tracking the tip of `main`, for anyone who wants a current build without waiting for a version tag.
+- Either way, the full test suite has to pass first - a broken run never produces or publishes binaries.
+
+**SDK** ([`sdk-publish.yml`](.github/workflows/sdk-publish.yml)):
+- Pushing a `sdk-v*.*.*` tag (e.g. `sdk-v0.2.0`) publishes [`mail-buddy-sdk`](https://www.npmjs.com/package/mail-buddy-sdk) to npm at that exact version (set from the tag at publish time, so the two never drift) and creates a matching GitHub Release.
+- Requires an `NPM_TOKEN` secret configured in the repository - without it, the publish step fails with an auth error rather than doing nothing silently.
 
 ## Contributing
 

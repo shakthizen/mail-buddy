@@ -1,15 +1,18 @@
 name: Build and Release
 
-# Runs on every push to main (direct commits and merged PRs). Tests gate the
-# build - a broken main never produces or publishes binaries. Successful
-# builds are published to a single rolling "latest" GitHub Release (tag
-# `latest`, marked as a pre-release so it never overrides an actual tagged
-# version release later), so there's always one place to grab a current
-# cross-platform build of main without needing to tag every commit.
+# Two triggers, one pipeline:
+#   - push to main            -> rolling "latest" pre-release (tag `latest`),
+#                                 replaced on every push, tracks the tip of main.
+#   - push of a `v*.*.*` tag  -> a real versioned release (e.g. v0.2.0),
+#                                 marked as the repo's "Latest release".
+# Tests gate the build either way - a broken run never produces or publishes
+# binaries. This only versions the app/binary; the SDK is versioned and
+# published independently via sdk-publish.yml on `sdk-v*` tags.
 
 on:
   push:
     branches: [main]
+    tags: ['v*.*.*']
 
 permissions:
   contents: write
@@ -132,18 +135,43 @@ jobs:
           find artifacts -type f -exec cp {} release/ \;
           ls -la release
 
-      - name: Publish rolling "latest" release
+      # A version tag (v0.2.0) gets a real, permanent release marked as
+      # "Latest release" on the repo page. A push to main (no tag) updates
+      # the rolling `latest` pre-release instead, which never claims that
+      # badge - GitHub won't honor make_latest on a prerelease anyway.
+      - name: Determine release parameters
+        id: params
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag_name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "release_name=Mail Buddy ${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "make_latest=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "body<<EOF"
+              echo "Release build of \`${{ github.ref_name }}\` (commit ${{ github.sha }})."
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_name=latest" >> "$GITHUB_OUTPUT"
+            echo "release_name=Latest build from main" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "make_latest=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "body<<EOF"
+              echo "Automatically built from the latest commit on \`main\`: ${{ github.sha }}"
+              echo ""
+              echo "This is a rolling build, not a tagged version - its binaries are replaced on every push to \`main\`. For a fixed point-in-time build, download from this release now, use a version tag release instead, or build from this specific commit yourself."
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          name: Latest build from main
-          body: |
-            Automatically built from the latest commit on `main`: ${{ github.sha }}
-
-            This is a rolling build, not a manually cut version - its binaries are replaced on every push to `main`. For a fixed point-in-time build, download from this release now or build from that specific commit yourself.
-          # GitHub's API will not honor make_latest on a prerelease (drafts and
-          # prereleases can't be marked "latest"), so both have to change together
-          # for this release to actually show as "Latest" on the repo page.
-          prerelease: false
-          make_latest: true
+          tag_name: ${{ steps.params.outputs.tag_name }}
+          name: ${{ steps.params.outputs.release_name }}
+          body: ${{ steps.params.outputs.body }}
+          prerelease: ${{ steps.params.outputs.prerelease }}
+          make_latest: ${{ steps.params.outputs.make_latest }}
           files: release/*

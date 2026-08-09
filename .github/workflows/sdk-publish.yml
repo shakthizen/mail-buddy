@@ -1,24 +1,28 @@
 name: Publish SDK to npm
 
-# Scaffolded per project-plan.md section 9 - intentionally NOT wired to run
-# automatically. Publishing a real version to the public npm registry is a
-# deliberate, manual release step (npm versions can't be unpublished after
-# 72h), not something that should happen as a side effect of pushing a tag
-# without a human deciding to. To use this for real:
-#   1. Remove the `if: false` guard below.
-#   2. Add an NPM_TOKEN secret (npm access token with publish rights) to the
-#      repository's Actions secrets.
-#   3. Tag a release as `sdk-v*` (e.g. `sdk-v0.1.0`) to trigger it.
+# Triggered by pushing a `sdk-v*` tag (e.g. `sdk-v0.2.0`) - independent of the
+# app's own `v*.*.*` version tags, since the SDK and the server/dashboard are
+# different artifacts with their own release cadence. The version in
+# packages/sdk/package.json is set FROM the tag at publish time (not the
+# other way around), so the published npm version always matches the git tag
+# exactly rather than relying on someone remembering to bump both in sync.
+#
+# Requires an NPM_TOKEN secret (an npm access token with publish rights) in
+# this repository's Actions secrets before it can actually publish - without
+# it, the "Publish to npm" step fails with an auth error rather than
+# silently doing nothing.
 
 on:
   push:
     tags:
       - 'sdk-v*'
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    if: false # remove this line when ready to actually publish - see note above
     defaults:
       run:
         working-directory: packages/sdk
@@ -27,11 +31,30 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.3.14
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
         working-directory: .
+
+      - name: Set package version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#sdk-v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' does not resolve to a valid semver version ('$VERSION')"
+            exit 1
+          fi
+          bun -e "
+            const pkg = await Bun.file('package.json').json();
+            pkg.version = '$VERSION';
+            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "SDK_VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Typecheck
         run: bun run typecheck
@@ -46,3 +69,15 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release for this SDK version
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: mail-buddy-sdk v${{ env.SDK_VERSION }}
+          body: |
+            Published to npm as [`mail-buddy-sdk@${{ env.SDK_VERSION }}`](https://www.npmjs.com/package/mail-buddy-sdk/v/${{ env.SDK_VERSION }}).
+
+            See [`packages/sdk/README.md`](https://github.com/${{ github.repository }}/blob/main/packages/sdk/README.md) for usage.
+          prerelease: false
+          make_latest: false

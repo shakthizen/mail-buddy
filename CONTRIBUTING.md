@@ -58,6 +58,15 @@ Note that `apps/api/src/webAssets.generated.ts` is gitignored (it's a build arti
 - Link any related issue.
 - A PR that changes API behavior should include or update tests covering that behavior.
 
+## Cutting a release
+
+See the "Releases" section in `README.md` for the full picture. In short, for maintainers:
+
+- **App binary:** push a `v*.*.*` tag on `main` (e.g. `git tag v0.2.0 && git push origin v0.2.0`). CI builds and publishes cross-platform binaries to a new GitHub Release automatically - nothing to do by hand beyond picking the version number.
+- **SDK:** push a `sdk-v*.*.*` tag (e.g. `git tag sdk-v0.2.0 && git push origin sdk-v0.2.0`). CI sets `packages/sdk/package.json`'s version from the tag and publishes to npm - don't bump that version manually beforehand, the tag is the source of truth.
+
+The two are versioned independently - an app release doesn't require an SDK release and vice versa.
+
 ## Questions
 
 Open a [discussion or issue](https://github.com/shakthizen/mail-buddy/issues) if anything here is unclear or you want to sanity-check an approach before investing time in it.
