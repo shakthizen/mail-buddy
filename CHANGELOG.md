@@ -12,6 +12,8 @@ All notable changes to this project are documented here. Format loosely follows 
 - **Test suite**: 94 tests in `apps/api` (unit + integration against an in-memory DB) and 10 in `packages/sdk`.
 - **Claude Code skill** (`.claude/skills/mail-buddy`) documenting integration for AI-assisted development.
 - Project documentation: `project-plan.md` (architecture/schema/API spec), `README.md` (with an auto-refreshing contributors badge via contrib.rocks), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates, this `CHANGELOG.md`, and MIT `LICENSE` (root and `packages/sdk`).
+- CI: `.github/workflows/build-and-release.yml` - runs the full test suite on every push to `main`, then cross-compiles the binary for Linux (x64/arm64), macOS (x64/arm64), and Windows (x64) and publishes them to a rolling `latest` GitHub Release.
+- `apps/api/.env.example` documenting every configurable environment variable, and confirmation (verified end-to-end) that Bun's compiled binary auto-loads `.env` from its working directory with no extra setup.
 
 ### Known gaps
 

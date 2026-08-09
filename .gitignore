@@ -5,6 +5,9 @@ apps/api/src/webAssets.generated.ts
 .DS_Store
 mail-buddy
 mail-buddy.exe
+mail-buddy-linux-*
+mail-buddy-macos-*
+mail-buddy-windows-*
 uploads/
 .test-uploads/
 *.sqlite

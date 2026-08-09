@@ -53,6 +53,21 @@ bun run compile   # -> ../../mail-buddy (regenerates the embedded dashboard mani
 
 The resulting binary is self-contained - it runs correctly from any working directory, with the dashboard and DB migrations both embedded. It lands around ~60-65MB: Bun always embeds its full runtime into `--compile` output, which is a fixed cost of the single-executable approach rather than something driven by this app's size (see `project-plan.md` section 8-A for detail).
 
+Or grab a prebuilt binary for Linux (x64/arm64), macOS (x64/arm64), or Windows (x64) from the [`latest` release](https://github.com/shakthizen/mail-buddy/releases/tag/latest), rebuilt automatically from `main` on every push by `.github/workflows/build-and-release.yml`.
+
+#### Deployment footprint
+
+The API server and the dashboard are both **inside** the binary - only three things live outside it:
+
+```
+mail-buddy              # the binary itself (API + dashboard)
+.env                    # optional - config; Bun loads this automatically from the cwd
+mail-buddy.sqlite       # the database (path configurable via DATABASE_PATH)
+uploads/                # locally-stored assets (path configurable via UPLOADS_DIR)
+```
+
+Copy `apps/api/.env.example` to `.env` next to the binary as a starting point - every value has a sane default, so an empty `.env` (or none at all) is a valid starting point too.
+
 ### Testing
 
 ```bash
