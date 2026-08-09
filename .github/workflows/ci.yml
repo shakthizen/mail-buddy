@@ -1,15 +1,17 @@
 name: Tests
 
-# Runs on pull requests and pushes to any branch, so PRs get feedback before
-# merge (build-and-release.yml only triggers on push to main, which happens
-# *after* merge - this is the workflow that actually gates a PR). Its own
-# test job runs again as a release gate in build-and-release.yml too; that's
+# Runs on pull requests and on every push, including main. This repo's actual
+# workflow so far has been direct pushes to main (no feature branches/PRs
+# yet) - excluding main from the push trigger, as an earlier version of this
+# file did, meant this workflow had literally never run and its README badge
+# permanently showed "no status". Including main means its test job overlaps
+# with build-and-release.yml's own test job on a main push; that's
 # intentional belt-and-suspenders for the workflow that actually publishes
-# binaries, not redundant waste.
+# binaries, not redundant waste, and it keeps this badge always meaningful
+# regardless of whether a change lands via PR or direct push.
 
 on:
   push:
-    branches-ignore: [main]
   pull_request:
     branches: [main]
 
