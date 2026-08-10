@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mail Buddy — self-hostable email template manager & delivery API</title>
+  <meta name="description" content="Mail Buddy is an open-source, self-hostable email template manager and delivery API. Ships as one compiled binary — no Docker, no separate frontend, no external database process." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="index.html">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="7" fill="#12151a"/>
+          <path d="M6 10.5C6 9.11929 7.11929 8 8.5 8H23.5C24.8807 8 26 9.11929 26 10.5V21.5C26 22.8807 24.8807 24 23.5 24H8.5C7.11929 24 6 22.8807 6 21.5V10.5Z" stroke="#6fe3c0" stroke-width="1.6"/>
+          <path d="M7 10L15.1056 15.0535C15.6091 15.3661 16.2477 15.3661 16.7512 15.0535L25 10" stroke="#6fe3c0" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        Mail Buddy
+      </a>
+      <div class="nav-links">
+        <a href="docs.html">Docs</a>
+        <a href="https://github.com/shakthizen/mail-buddy/releases">Releases</a>
+        <a href="https://www.npmjs.com/package/mail-buddy-sdk">SDK on npm</a>
+        <a href="https://github.com/shakthizen/mail-buddy">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" style="border-top: none;">
+      <div class="container">
+        <h1>Mail Buddy</h1>
+        <p class="tagline">
+          An open-source, self-hostable email template manager and delivery API.
+          Ships as <strong>one compiled binary</strong> — no Docker, no separate
+          frontend deployment, no external database process.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="docs.html">Read the docs</a>
+          <a class="btn btn-secondary" href="https://github.com/shakthizen/mail-buddy">View on GitHub</a>
+        </div>
+        <div class="badges" style="justify-content: center;">
+          <a href="https://github.com/shakthizen/mail-buddy/actions/workflows/ci.yml"><img src="https://github.com/shakthizen/mail-buddy/actions/workflows/ci.yml/badge.svg" alt="Tests status" /></a>
+          <a href="https://github.com/shakthizen/mail-buddy/actions/workflows/build-and-release.yml"><img src="https://github.com/shakthizen/mail-buddy/actions/workflows/build-and-release.yml/badge.svg" alt="Build and Release status" /></a>
+          <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" /></a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2>What's implemented</h2>
+        <p class="section-sub">An Elysia (Bun) API server with a React admin dashboard embedded directly into the executable.</p>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>Template CRUD</h3>
+            <p>Handlebars placeholder auto-extraction and recursive <code>{{embed "uuid"}}</code> resolution with cycle detection.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Asset uploads</h3>
+            <p>Local storage today, with an S3 driver stubbed for future support.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Single &amp; batch send</h3>
+            <p>A SQLite-backed delivery queue with an exponential-backoff retry worker, plus personalized batch sends.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Scoped API keys</h3>
+            <p>Database-backed <code>admin</code> / <code>send_only</code> keys, optionally restricted to specific origins or IPs.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Suppression lists</h3>
+            <p>Per-template and global suppression, with signed one-click unsubscribe links.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Typed Node SDK</h3>
+            <p><code>mail-buddy-sdk</code> covers every endpoint — built, typechecked, and unit tested.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2>Quickstart</h2>
+        <p class="section-sub">Requires <a href="https://bun.sh/">Bun</a> 1.x.</p>
+        <pre><code>bun install                # installs all workspaces (apps/api, apps/web, packages/sdk)
+bun run web:build          # builds the dashboard to apps/web/dist
+bun run api:start          # generates the embedded-asset manifest, runs migrations, starts the server</code></pre>
+        <p>Open <code>http://localhost:3000</code> and paste the one-time admin key printed on first boot into the login screen.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2>Single binary, minimal footprint</h2>
+        <p class="section-sub">The API server and the dashboard both live inside the binary — only three things live outside it.</p>
+        <div class="footprint">
+          <pre><code>mail-buddy              # the binary itself (API + dashboard)
+.env                    # optional - config; Bun loads this automatically from the cwd
+mail-buddy.sqlite       # the database (path configurable via DATABASE_PATH)
+uploads/                # locally-stored assets (path configurable via UPLOADS_DIR)</code></pre>
+        </div>
+        <p>Or grab a prebuilt binary from <a href="https://github.com/shakthizen/mail-buddy/releases">GitHub Releases</a> instead of compiling one yourself.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>MIT licensed — see <a href="https://github.com/shakthizen/mail-buddy/blob/main/LICENSE">LICENSE</a>.
+      Read the <a href="docs.html">docs</a>, browse the <a href="https://github.com/shakthizen/mail-buddy">source</a>,
+      or check <a href="https://github.com/shakthizen/mail-buddy/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> to get involved.</p>
+    </div>
+  </footer>
+</body>
+</html>

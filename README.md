@@ -6,6 +6,8 @@
 
 Mail Buddy is an open-source, self-hostable email template manager and delivery API. It ships as **one compiled binary** - an Elysia (Bun) API server with the React admin dashboard embedded directly into the executable, no Docker, no separate frontend deployment, no external database process.
 
+**[Website & docs](https://shakthizen.github.io/mail-buddy/)**
+
 See [`project-plan.md`](./project-plan.md) for the full architecture, database schema, and REST API specification this implementation follows.
 
 ## What's implemented
