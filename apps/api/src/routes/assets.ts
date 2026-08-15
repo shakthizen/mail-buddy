@@ -50,7 +50,7 @@ export const assetRoutes = new Elysia({ prefix: '/api/assets' })
 
       const id = crypto.randomUUID();
       const filename = `${id}${extname(file.name)}`;
-      const urlPath = await saveFile(filename, new Uint8Array(await file.arrayBuffer()));
+      const urlPath = await saveFile(filename, new Uint8Array(await file.arrayBuffer()), file.type);
 
       db.insert(assets)
         .values({
@@ -84,11 +84,20 @@ export const assetRoutes = new Elysia({ prefix: '/api/assets' })
 
 /** Public, unauthenticated route - uploaded images must be viewable by any mail client. */
 export const publicUploadRoutes = new Elysia().get('/uploads/:filename', async ({ params, set }) => {
-  const { readLocalFile } = await import('../storage/local');
-  const file = await readLocalFile(params.filename);
+  const { readFile } = await import('../storage');
+  const file = await readFile(params.filename);
   if (!file) {
     set.status = 404;
     return { error: 'not_found', message: 'File not found' };
+  }
+  if ('data' in file && 'contentType' in file) {
+    set.headers['content-type'] = file.contentType;
+    return new Response(file.data, {
+      headers: {
+        'content-type': file.contentType,
+        'cache-control': 'public, max-age=31536000, immutable',
+      },
+    });
   }
   return file;
 });

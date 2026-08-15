@@ -3,8 +3,8 @@ export type ApiKeyScope = 'admin' | 'send_only';
 export interface MailBuddyClientOptions {
   /** Base URL of the self-hosted Mail Buddy server, e.g. "https://mail.example.com" */
   baseUrl: string;
-  /** API key created via the Settings > API Keys page (or the first-boot bootstrap key). */
-  apiKey: string;
+  /** API key created via the Settings > API Keys page (or session token / bootstrap key). */
+  apiKey?: string;
   /** Override the default fetch implementation (useful for testing). */
   fetch?: typeof fetch;
 }
@@ -34,6 +34,19 @@ export interface CreateTemplateInput {
 }
 
 export type UpdateTemplateInput = Partial<CreateTemplateInput>;
+
+export interface PreviewTemplateInput {
+  htmlContent: string;
+  variables?: Record<string, any>;
+}
+
+export interface PreviewTemplateResponse {
+  renderedHtml: string;
+  resolvedTemplate: string;
+  placeholders: string[];
+  embeds: Array<{ id: string; name: string }>;
+  variablesUsed: Record<string, any>;
+}
 
 export interface Asset {
   id: string;
@@ -82,19 +95,42 @@ export interface SettingsPayload {
     user: string;
     password: string;
     secure: boolean;
+    fromAddress?: string;
+    fromName?: string;
   };
   storage: {
     provider: 'local' | 's3';
     s3BucketName?: string;
     s3Region?: string;
     s3Endpoint?: string;
+    s3AccessKeyId?: string;
+    s3SecretAccessKey?: string;
+    s3ForcePathStyle?: boolean;
+    s3PublicUrl?: string;
+  };
+  general?: {
+    publicUrl?: string;
   };
 }
 
 export type UpdateSettingsInput = Partial<{
   smtp: Partial<SettingsPayload['smtp']>;
   storage: Partial<SettingsPayload['storage']>;
+  general: Partial<{ publicUrl: string }>;
 }>;
+
+export interface TestEmailResponse {
+  success: boolean;
+  message: string;
+  messageId?: string;
+}
+
+export interface TestStorageResponse {
+  ok: boolean;
+  provider: 'local' | 's3';
+  message?: string;
+  error?: string;
+}
 
 export interface ApiKeySummary {
   id: string;
@@ -146,6 +182,32 @@ export interface CheckSuppressionResult {
 
 export interface HealthResponse {
   status: 'ok';
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'member';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthStatusResponse {
+  initialized: boolean;
+  user: User | null;
+}
+
+export interface AuthLoginResponse {
+  user: User;
+  token: string;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+  role?: 'admin' | 'member';
 }
 
 export interface MailBuddyApiErrorBody {

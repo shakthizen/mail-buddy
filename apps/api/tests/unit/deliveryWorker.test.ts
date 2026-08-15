@@ -7,6 +7,9 @@ const sendMailMock = mock(async (_opts: { to: string; subject: string; html: str
 mock.module('../../src/smtp/mailer', () => ({
   sendMail: sendMailMock,
   createTransport: mock(() => ({})),
+  sendTestEmail: mock(async () => ({ success: true, messageId: 'test-msg-id' })),
+  verifySmtpConnection: mock(async () => ({ ok: true })),
+  getFromAddress: mock(() => 'noreply@example.com'),
 }));
 
 const { tick, processJob, backoffDelayMs } = await import('../../src/worker/deliveryWorker');

@@ -1,5 +1,12 @@
 import type { HttpClient } from '../http';
-import type { CreateTemplateInput, PageParams, Template, UpdateTemplateInput } from '../types';
+import type {
+  CreateTemplateInput,
+  PageParams,
+  PreviewTemplateInput,
+  PreviewTemplateResponse,
+  Template,
+  UpdateTemplateInput,
+} from '../types';
 
 export function createTemplatesResource(request: HttpClient) {
   return {
@@ -9,6 +16,8 @@ export function createTemplatesResource(request: HttpClient) {
         query: params,
       }),
     get: (id: string) => request<Template>({ path: `/api/templates/${id}` }),
+    preview: (data: PreviewTemplateInput) =>
+      request<PreviewTemplateResponse>({ method: 'POST', path: '/api/templates/preview', body: data }),
     create: (data: CreateTemplateInput) =>
       request<Template>({ method: 'POST', path: '/api/templates', body: data }),
     update: (id: string, data: UpdateTemplateInput) =>

@@ -5,6 +5,8 @@ import { apiKeys } from '../db/schema';
 import { authPlugin, requireAdmin } from '../auth/middleware';
 import { getSettingsPayload, updateSettingsPayload } from '../lib/appSettings';
 import { generateApiKey } from '../auth/apiKeyCrypto';
+import { sendTestEmail, verifySmtpConnection } from '../smtp/mailer';
+import { verifyS3Connection } from '../storage/s3';
 
 function serializeKey(row: typeof apiKeys.$inferSelect) {
   return {
@@ -36,6 +38,8 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
             user: t.Optional(t.String()),
             password: t.Optional(t.String()),
             secure: t.Optional(t.Boolean()),
+            fromAddress: t.Optional(t.String()),
+            fromName: t.Optional(t.String()),
           }),
         ),
         storage: t.Optional(
@@ -44,11 +48,57 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
             s3BucketName: t.Optional(t.String()),
             s3Region: t.Optional(t.String()),
             s3Endpoint: t.Optional(t.String()),
+            s3AccessKeyId: t.Optional(t.String()),
+            s3SecretAccessKey: t.Optional(t.String()),
+            s3ForcePathStyle: t.Optional(t.Boolean()),
+            s3PublicUrl: t.Optional(t.String()),
+          }),
+        ),
+        general: t.Optional(
+          t.Object({
+            publicUrl: t.Optional(t.String()),
           }),
         ),
       }),
     },
   )
+  .post(
+    '/test-email',
+    async ({ body, set }) => {
+      try {
+        const result = await sendTestEmail(body.to);
+        return {
+          success: true,
+          message: `Test email sent successfully to ${body.to}`,
+          messageId: result.messageId,
+        };
+      } catch (err: any) {
+        set.status = 400;
+        return {
+          success: false,
+          error: 'smtp_error',
+          message: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    {
+      body: t.Object({
+        to: t.String(),
+      }),
+    },
+  )
+  .post('/test-storage', async ({ set }) => {
+    const settings = getSettingsPayload(false);
+    if (settings.storage.provider === 'local') {
+      return { ok: true, provider: 'local', message: 'Local storage is active and ready' };
+    }
+    const result = await verifyS3Connection();
+    if (!result.ok) {
+      set.status = 400;
+      return { ok: false, provider: 's3', error: 's3_connection_failed', message: result.message };
+    }
+    return { ok: true, provider: 's3', message: 'Successfully connected to S3 bucket' };
+  })
   .get('/api-keys', () => ({ apiKeys: db.select().from(apiKeys).all().map(serializeKey) }))
   .post(
     '/api-keys',

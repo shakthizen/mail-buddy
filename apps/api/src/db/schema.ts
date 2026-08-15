@@ -76,3 +76,24 @@ export const suppressions = sqliteTable('suppression', {
 }, (table) => [
   uniqueIndex('suppression_email_template_id_idx').on(table.email, table.templateId),
 ]);
+
+export const users = sqliteTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  passwordHash: text('password_hash').notNull(),
+  role: text('role').default('admin').notNull(), // 'admin' | 'member'
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text('updated_at').default(sql`(CURRENT_TIMESTAMP)`),
+}, (table) => [
+  uniqueIndex('user_email_idx').on(table.email),
+]);
+
+export const sessions = sqliteTable('session', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+}, (table) => [
+  index('session_user_id_idx').on(table.userId),
+]);

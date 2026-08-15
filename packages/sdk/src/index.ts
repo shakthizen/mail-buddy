@@ -3,6 +3,8 @@ import { createTemplatesResource } from './resources/templates';
 import { createAssetsResource } from './resources/assets';
 import { createApiKeysResource, createSettingsResource } from './resources/settings';
 import { createSuppressionsResource } from './resources/suppressions';
+import { createAuthResource } from './resources/auth';
+import { createUsersResource } from './resources/users';
 import type { HealthResponse, MailBuddyClientOptions, SendInput, SendResponse } from './types';
 
 export class MailBuddyClient {
@@ -11,6 +13,8 @@ export class MailBuddyClient {
   readonly settings: ReturnType<typeof createSettingsResource>;
   readonly apiKeys: ReturnType<typeof createApiKeysResource>;
   readonly suppressions: ReturnType<typeof createSuppressionsResource>;
+  readonly auth: ReturnType<typeof createAuthResource>;
+  readonly users: ReturnType<typeof createUsersResource>;
 
   private readonly request: ReturnType<typeof createHttpClient>;
 
@@ -28,6 +32,8 @@ export class MailBuddyClient {
     this.settings = createSettingsResource(this.request);
     this.apiKeys = createApiKeysResource(this.request);
     this.suppressions = createSuppressionsResource(this.request);
+    this.auth = createAuthResource(this.request);
+    this.users = createUsersResource(this.request);
   }
 
   send(input: SendInput) {
