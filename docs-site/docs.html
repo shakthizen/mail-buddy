@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Documentation — Mail Buddy</title>
-  <meta name="description" content="Mail Buddy documentation: quickstart, compiling the single binary, environment variables, API & SDK usage, monorepo layout, and releases." />
+  <meta name="description" content="Mail Buddy documentation: quickstart, compiling the single binary, authentication, configuration, API & SDK usage, and releases." />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -34,20 +34,25 @@
         <h4>Getting started</h4>
         <ul>
           <li><a href="#quickstart">Quickstart</a></li>
+          <li><a href="#onboarding">Admin Onboarding</a></li>
           <li><a href="#compiling">Compiling the binary</a></li>
           <li><a href="#footprint">Deployment footprint</a></li>
           <li><a href="#testing">Testing</a></li>
         </ul>
+        <h4>Configuration</h4>
+        <ul>
+          <li><a href="#zero-env">Zero-Env &amp; Settings</a></li>
+          <li><a href="#storage-engine">Storage (Local &amp; S3)</a></li>
+          <li><a href="#env-vars">Environment variables</a></li>
+        </ul>
         <h4>Reference</h4>
         <ul>
-          <li><a href="#env-vars">Environment variables</a></li>
           <li><a href="#api">API &amp; SDK</a></li>
           <li><a href="#layout">Monorepo layout</a></li>
         </ul>
         <h4>Project</h4>
         <ul>
           <li><a href="#releases">Releases</a></li>
-          <li><a href="#known-gaps">Known gaps</a></li>
           <li><a href="#contributing">Contributing</a></li>
         </ul>
       </nav>
@@ -58,44 +63,49 @@
         <pre><code>bun install                # installs all workspaces (apps/api, apps/web, packages/sdk)
 bun run web:build          # builds the dashboard to apps/web/dist
 bun run api:start          # generates the embedded-asset manifest, runs migrations, starts the server</code></pre>
-        <p>On first boot with no API keys in the database, the server prints a one-time admin key to the console:</p>
-        <pre><code>======================================================
- Mail Buddy - first boot: no API keys found.
- Generated an admin API key. Save it now - it will
- never be shown again:
 
-   mb_...
-
- Paste this into the dashboard login screen to continue.
-======================================================</code></pre>
-        <p>Open <code>http://localhost:3000</code> and paste that key into the login screen.</p>
+        <h2 id="onboarding">Admin Onboarding &amp; Authentication</h2>
+        <p>Mail Buddy boots with <strong>zero initial configuration</strong> required.</p>
+        <p>When you navigate to <code>http://localhost:3000</code> for the first time, you are guided through the First-Run Setup wizard to create your primary administrator account. Public registration is permanently disabled. Once logged in, administrators can invite or create additional team members with generated passwords under <strong>Configuration &gt; Team Users</strong>.</p>
 
         <h2 id="compiling">Compiling the single binary</h2>
         <pre><code>cd apps/api
 bun run compile   # -> ../../mail-buddy (regenerates the embedded dashboard manifest first)</code></pre>
         <p>
-          The resulting binary is self-contained — it runs correctly from any working directory, with the
-          dashboard and DB migrations both embedded. It lands around ~60&ndash;65MB: Bun always embeds its full
-          runtime into <code>--compile</code> output, which is a fixed cost of the single-executable approach
-          rather than something driven by this app's size (see
-          <a href="https://github.com/shakthizen/mail-buddy/blob/main/project-plan.md#8-a-deployment-footprint">project-plan.md section 8-A</a>
-          for detail).
+          The resulting binary is fully self-contained — it runs correctly from any working directory, with the
+          dashboard and DB migrations both embedded. It lands around ~60&ndash;65MB (Bun's embedded runtime).
         </p>
         <p>Or grab a <a href="https://github.com/shakthizen/mail-buddy/releases">prebuilt binary</a> instead of compiling one yourself.</p>
 
         <h2 id="footprint">Deployment footprint</h2>
-        <p>The API server and the dashboard are both <strong>inside</strong> the binary — only three things live outside it:</p>
+        <p>The API server and the dashboard are both <strong>inside</strong> the binary — only two things live outside it by default:</p>
         <pre><code>mail-buddy              # the binary itself (API + dashboard)
-.env                    # optional - config; Bun loads this automatically from the cwd
 mail-buddy.sqlite       # the database (path configurable via DATABASE_PATH)
-uploads/                # locally-stored assets (path configurable via UPLOADS_DIR)</code></pre>
-        <p>Copy <code>apps/api/.env.example</code> to <code>.env</code> next to the binary as a starting point — every value has a sane default, so an empty <code>.env</code> (or none at all) is a valid starting point too.</p>
+uploads/                # locally-stored assets (only when using local storage provider)</code></pre>
 
         <h2 id="testing">Testing</h2>
-        <pre><code>bun run api:test   # unit + integration tests for apps/api, against an in-memory DB
-bun run sdk:test   # unit tests for the SDK's HTTP client and resource routing</code></pre>
+        <pre><code>bun test   # runs all 116 unit + integration tests across the monorepo</code></pre>
 
-        <h2 id="env-vars">Environment variables</h2>
+        <h2 id="zero-env">Zero-Env &amp; Dynamic Settings</h2>
+        <p>
+          Mail Buddy does not require an <code>.env</code> file. All operational settings (SMTP credentials, storage provider, and server URLs) are persisted dynamically in the SQLite database and configured directly in the web UI.
+        </p>
+        <ul>
+          <li><strong>SMTP Settings (<code>/settings/smtp</code>)</strong>: Configure host, port, user, password, and test connectivity in real-time with the <em>"Send Test Email"</em> tool.</li>
+          <li><strong>Storage Engine (<code>/settings/storage</code>)</strong>: Switch between Local filesystem storage and Amazon S3 / S3-compatible buckets.</li>
+          <li><strong>API Keys (<code>/settings/api-keys</code>)</strong>: Issue scoped (<code>admin</code> or <code>send_only</code>) keys for backend services with optional IP and Origin whitelisting.</li>
+        </ul>
+
+        <h2 id="storage-engine">Storage Engine (Local &amp; S3)</h2>
+        <p>
+          Mail Buddy supports two storage providers:
+        </p>
+        <ol>
+          <li><strong>Local Filesystem (Default)</strong>: Stores uploaded images under <code>./uploads</code>.</li>
+          <li><strong>Amazon S3 &amp; S3-Compatible</strong>: Direct integration with AWS S3, LocalStack, MinIO, Cloudflare R2, and DigitalOcean Spaces. Includes a live <em>"Test S3 Bucket Access"</em> verification tool.</li>
+        </ol>
+
+        <h2 id="env-vars">Optional Environment variables</h2>
         <table>
           <thead>
             <tr><th>Variable</th><th>Default</th><th>Notes</th></tr>
@@ -103,89 +113,56 @@ bun run sdk:test   # unit tests for the SDK's HTTP client and resource routing</
           <tbody>
             <tr><td><code>PORT</code></td><td><code>3000</code></td><td>HTTP port</td></tr>
             <tr><td><code>DATABASE_PATH</code></td><td><code>./mail-buddy.sqlite</code></td><td>SQLite file location</td></tr>
-            <tr><td><code>UPLOADS_DIR</code></td><td><code>./uploads</code></td><td>Local asset storage directory (when <code>STORAGE_PROVIDER=local</code>)</td></tr>
-            <tr><td><code>STORAGE_PROVIDER</code></td><td><code>local</code></td><td><code>local</code> or <code>s3</code> (<code>s3</code> not yet implemented)</td></tr>
-            <tr><td><code>MAX_UPLOAD_SIZE_BYTES</code></td><td><code>5242880</code> (5MB)</td><td>Asset upload size limit</td></tr>
-            <tr><td><code>PUBLIC_URL</code></td><td><em>(derived from request)</em></td><td>Base URL used to build unsubscribe links; set explicitly behind a proxy</td></tr>
-            <tr><td><code>SMTP_FROM</code></td><td><em>(SMTP user)</em></td><td>Default "From" address for outgoing mail</td></tr>
-            <tr><td><code>DELIVERY_WORKER_INTERVAL_MS</code></td><td><code>5000</code></td><td>Delivery queue poll interval</td></tr>
-            <tr><td><code>DELIVERY_WORKER_BATCH_SIZE</code></td><td><code>10</code></td><td>Jobs processed per poll</td></tr>
-            <tr><td><code>DELIVERY_WORKER_BASE_DELAY_MS</code></td><td><code>30000</code></td><td>Retry backoff base (<code>base * attempts^2</code>, capped)</td></tr>
-            <tr><td><code>DELIVERY_WORKER_MAX_DELAY_MS</code></td><td><code>1800000</code> (30min)</td><td>Retry backoff cap</td></tr>
+            <tr><td><code>UPLOADS_DIR</code></td><td><code>./uploads</code></td><td>Local asset storage directory</td></tr>
             <tr><td><code>LOG_LEVEL</code></td><td><code>info</code></td><td><code>fatal</code> | <code>error</code> | <code>warn</code> | <code>info</code> | <code>debug</code> | <code>trace</code> | <code>silent</code></td></tr>
           </tbody>
         </table>
-        <p>
-          SMTP host/port/user/password and the active storage provider are configured at runtime via the
-          dashboard's Settings &rarr; SMTP &amp; Storage page (backed by <code>PUT /api/settings</code>), not
-          environment variables — see
-          <a href="https://github.com/shakthizen/mail-buddy/blob/main/project-plan.md#4-rest-api-specification">project-plan.md section 4</a>.
-        </p>
-        <p>
-          All environment variables are validated at startup with
-          <a href="https://github.com/af/envalid">envalid</a> (<code>apps/api/src/env.ts</code>) — the process
-          exits with a clear message on a missing or malformed value instead of failing later.
-        </p>
 
         <h2 id="api">API &amp; SDK</h2>
         <p>
-          Full REST API specification (auth model, every endpoint, request/response shapes, delivery behavior)
-          lives in
-          <a href="https://github.com/shakthizen/mail-buddy/blob/main/project-plan.md#4-rest-api-specification">project-plan.md</a>.
-          Every endpoint documented there is implemented in <code>apps/api/src/routes/</code>.
+          Prefer using <a href="https://www.npmjs.com/package/mail-buddy-sdk">mail-buddy-sdk</a> for seamless TypeScript integration:
         </p>
-        <p>Prefer using <a href="https://www.npmjs.com/package/mail-buddy-sdk">mail-buddy-sdk</a> over calling the API directly where possible:</p>
         <pre><code>import { MailBuddyClient } from 'mail-buddy-sdk';
 
-const client = new MailBuddyClient({ baseUrl: 'http://localhost:3000', apiKey: '...' });
+const client = new MailBuddyClient({
+  baseUrl: 'http://localhost:3000',
+  apiKey: 'mb_YOUR_API_KEY',
+});
+
+// Single send
 await client.send({
   to: 'user@example.com',
   subject: 'Welcome',
-  templateUuid: '...',
+  templateId: '123e4567-e89b-12d3-a456-426614174000',
   variables: { username: 'Jane' },
+});
+
+// Live template compilation preview
+const preview = await client.templates.preview({
+  htmlContent: '{{embed "header-id"}}<p>Order #{{order_id}}</p>',
+  variables: { order_id: '1234' },
 });</code></pre>
 
         <h2 id="layout">Monorepo layout</h2>
         <pre><code>apps/api        Elysia server - REST API, delivery worker, embeds apps/web/dist at compile time
 apps/web        React (Vite + Tailwind) admin dashboard
-packages/sdk    mail-buddy-sdk - published Node.js client</code></pre>
+packages/sdk    mail-buddy-sdk - published Node.js client
+docs-site       Documentation static website</code></pre>
 
         <h2 id="releases">Releases</h2>
-        <p>Two independent things get versioned and released here — the server/dashboard binary and the SDK — each with its own tags and CI workflow.</p>
-        <h3>App binary</h3>
-        <p>
-          (<a href="https://github.com/shakthizen/mail-buddy/blob/main/.github/workflows/build-and-release.yml">build-and-release.yml</a>)
-        </p>
+        <p>The server/dashboard binary and the SDK are versioned and released independently.</p>
         <ul>
-          <li>Pushing a <code>v*.*.*</code> tag (e.g. <code>v0.2.0</code>) publishes a permanent, versioned <a href="https://github.com/shakthizen/mail-buddy/releases">GitHub Release</a> with binaries for Linux (x64/arm64), macOS (x64/arm64), and Windows (x64), and marks it as the repo's "Latest release".</li>
-          <li>Every push to <code>main</code> also updates a rolling <a href="https://github.com/shakthizen/mail-buddy/releases/tag/latest"><code>latest</code> pre-release</a> tracking the tip of <code>main</code>, for anyone who wants a current build without waiting for a version tag.</li>
-          <li>Either way, the full test suite has to pass first — a broken run never produces or publishes binaries.</li>
-        </ul>
-        <h3>SDK</h3>
-        <p>
-          (<a href="https://github.com/shakthizen/mail-buddy/blob/main/.github/workflows/sdk-publish.yml">sdk-publish.yml</a>)
-        </p>
-        <ul>
-          <li>Pushing a <code>sdk-v*.*.*</code> tag (e.g. <code>sdk-v0.2.0</code>) publishes <a href="https://www.npmjs.com/package/mail-buddy-sdk">mail-buddy-sdk</a> to npm at that exact version (set from the tag at publish time, so the two never drift) and creates a matching GitHub Release.</li>
-          <li>Requires an <code>NPM_TOKEN</code> secret configured in the repository — without it, the publish step fails with an auth error rather than doing nothing silently.</li>
-        </ul>
-
-        <h2 id="known-gaps">Known gaps</h2>
-        <ul>
-          <li><strong>S3 storage driver</strong>: documented in the plan and stubbed in code (<code>STORAGE_PROVIDER=s3</code> throws a clear "not implemented" error), but only the <code>local</code> driver actually works right now.</li>
-          <li><strong>Visual drag-and-drop template builder</strong>: the editor is a raw HTML/Handlebars textarea with an unrendered live preview, not the block-based visual builder described in the plan's UI section. This is the single biggest remaining product gap.</li>
-          <li><strong>The SDK publish workflow</strong> is wired up and triggers on <code>sdk-v*.*.*</code> tags, but still needs an <code>NPM_TOKEN</code> secret configured in the repository before it can actually publish.</li>
+          <li><strong>App binary</strong>: Pushing a <code>v*.*.*</code> tag builds and attaches cross-platform binaries to a GitHub Release.</li>
+          <li><strong>SDK</strong>: Pushing an <code>sdk-v*.*.*</code> tag publishes <code>mail-buddy-sdk</code> to npm.</li>
         </ul>
 
         <h2 id="contributing">Contributing</h2>
         <p>
           Contributions are welcome — see
           <a href="https://github.com/shakthizen/mail-buddy/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
-          for dev setup, testing, and PR expectations, and
+          for dev setup and
           <a href="https://github.com/shakthizen/mail-buddy/blob/main/CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a>
-          for community standards. Found a security issue? Please follow
-          <a href="https://github.com/shakthizen/mail-buddy/blob/main/SECURITY.md">SECURITY.md</a>
-          instead of opening a public issue.
+          for community standards.
         </p>
       </div>
     </div>
