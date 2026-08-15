@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
 import { db } from '../src/db/client';
-import { apiKeys, assets, deliveryLogs, deliveryQueue, settings, suppressions, templates } from '../src/db/schema';
+import { apiKeys, assets, deliveryLogs, deliveryQueue, sessions, settings, suppressions, templates, users } from '../src/db/schema';
 import { generateApiKey } from '../src/auth/apiKeyCrypto';
 
 /** The test DB is one shared in-memory instance for the whole `bun test` run
@@ -15,6 +15,8 @@ export function resetDb() {
   db.delete(suppressions).run();
   db.delete(assets).run();
   db.delete(templates).run();
+  db.delete(sessions).run();
+  db.delete(users).run();
   db.delete(apiKeys).run();
   db.delete(settings).run();
 }
@@ -24,12 +26,16 @@ import { assetRoutes, publicUploadRoutes } from '../src/routes/assets';
 import { settingsRoutes } from '../src/routes/settings';
 import { suppressionRoutes, publicUnsubscribeRoutes } from '../src/routes/suppressions';
 import { sendRoutes } from '../src/routes/send';
+import { authRoutes } from '../src/routes/auth';
+import { usersRoutes } from '../src/routes/users';
 
 /** Same route composition as src/index.ts, minus the static-SPA catch-all and the
  * worker/bootstrap side effects - those don't belong in a route-level test app. */
 export function buildTestApp() {
   return new Elysia()
     .use(healthRoutes)
+    .use(authRoutes)
+    .use(usersRoutes)
     .use(publicUploadRoutes)
     .use(publicUnsubscribeRoutes)
     .use(templateRoutes)

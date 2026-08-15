@@ -55,28 +55,28 @@
         <p class="section-sub">An Elysia (Bun) API server with a React admin dashboard embedded directly into the executable.</p>
         <div class="feature-grid">
           <div class="feature-card">
-            <h3>Template CRUD</h3>
-            <p>Handlebars placeholder auto-extraction and recursive <code>{{embed "uuid"}}</code> resolution with cycle detection.</p>
+            <h3>Recursive Templates</h3>
+            <p>Live compilation, Handlebars placeholder aggregation, Desktop/Mobile previews, and recursive <code>{{embed "uuid"}}</code> resolution.</p>
           </div>
           <div class="feature-card">
-            <h3>Asset uploads</h3>
-            <p>Local storage today, with an S3 driver stubbed for future support.</p>
+            <h3>Local &amp; S3 Storage</h3>
+            <p>Store email assets locally or in AWS S3, MinIO, Cloudflare R2, or DigitalOcean Spaces with live connection testing.</p>
           </div>
           <div class="feature-card">
-            <h3>Single &amp; batch send</h3>
-            <p>A SQLite-backed delivery queue with an exponential-backoff retry worker, plus personalized batch sends.</p>
+            <h3>Single &amp; Batch Delivery</h3>
+            <p>SQLite-backed queue with exponential retry backoff, multi-recipient fan-out, and personalized batch sends.</p>
           </div>
           <div class="feature-card">
-            <h3>Scoped API keys</h3>
-            <p>Database-backed <code>admin</code> / <code>send_only</code> keys, optionally restricted to specific origins or IPs.</p>
+            <h3>User Auth &amp; Scoped API Keys</h3>
+            <p>First-run admin setup, team user management with random password generator, and scoped microservice API keys.</p>
           </div>
           <div class="feature-card">
-            <h3>Suppression lists</h3>
-            <p>Per-template and global suppression, with signed one-click unsubscribe links.</p>
+            <h3>Suppression Lists</h3>
+            <p>Per-template and global suppression with automatic HMAC-signed one-click unsubscribe links.</p>
           </div>
           <div class="feature-card">
             <h3>Typed Node SDK</h3>
-            <p><code>mail-buddy-sdk</code> covers every endpoint — built, typechecked, and unit tested.</p>
+            <p><code>mail-buddy-sdk</code> covers every endpoint with zero runtime dependencies and full TypeScript types.</p>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@
         <pre><code>bun install                # installs all workspaces (apps/api, apps/web, packages/sdk)
 bun run web:build          # builds the dashboard to apps/web/dist
 bun run api:start          # generates the embedded-asset manifest, runs migrations, starts the server</code></pre>
-        <p>Open <code>http://localhost:3000</code> and paste the one-time admin key printed on first boot into the login screen.</p>
+        <p>Open <code>http://localhost:3000</code> to set up your primary administrator account and access the dashboard.</p>
       </div>
     </section>
 
@@ -99,9 +99,8 @@ bun run api:start          # generates the embedded-asset manifest, runs migrati
         <p class="section-sub">The API server and the dashboard both live inside the binary — only three things live outside it.</p>
         <div class="footprint">
           <pre><code>mail-buddy              # the binary itself (API + dashboard)
-.env                    # optional - config; Bun loads this automatically from the cwd
 mail-buddy.sqlite       # the database (path configurable via DATABASE_PATH)
-uploads/                # locally-stored assets (path configurable via UPLOADS_DIR)</code></pre>
+uploads/                # locally-stored assets (when using local storage provider)</code></pre>
         </div>
         <p>Or grab a prebuilt binary from <a href="https://github.com/shakthizen/mail-buddy/releases">GitHub Releases</a> instead of compiling one yourself.</p>
       </div>

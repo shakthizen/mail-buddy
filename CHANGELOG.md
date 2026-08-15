@@ -1,28 +1,57 @@
 # Changelog
 
-All notable changes to this project are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The app binary (`v*.*.*` tags) and the SDK (`sdk-v*.*.*` tags) are versioned and released independently - see "Releases" in `README.md`.
+All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The app binary (`v*.*.*` tags) and the SDK (`sdk-v*.*.*` tags) are versioned and released independently - see "Releases" in `README.md`.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **User Authentication & Initial Admin Setup**:
+  - First-run onboarding wizard creating the primary administrative account (`name`, `email`, `passwordHash`).
+  - Public registration disabled by default for maximum self-hosted security.
+  - Session tokens with 30-day expiration (`mbs_...`) and dual auth middleware supporting both API keys and user sessions.
+  - Team User Management (`/settings/users`) allowing administrators to create team accounts with an integrated secure random password generator and clipboard copy tool.
+- **Full Amazon S3 & S3-Compatible Storage Engine**:
+  - Implemented `@aws-sdk/client-s3` storage driver supporting AWS S3, LocalStack, MinIO, Cloudflare R2, and DigitalOcean Spaces.
+  - Configurable custom endpoints, path-style addressing, and public asset base URL.
+  - Tested against live LocalStack integration tests (`storageS3.test.ts`).
+- **Zero-Env Architecture & Dynamic SQLite Settings**:
+  - Application boots out-of-the-box with zero required environment variables.
+  - All operational settings (SMTP, Storage, General) are persisted directly in SQLite with encrypted/masked secret handling.
+- **Dedicated Settings Pages & Live Verification Tools**:
+  - Separated SMTP (`/settings/smtp`) and Storage (`/settings/storage`) into dedicated pages.
+  - Added **"Send Real-Time Test Email"** tool to verify SMTP connectivity with instant diagnostics feedback.
+  - Added **"Test S3 Bucket Access"** tool to verify bucket credentials and permissions.
+- **Breadcrumbs Navigation**:
+  - Automatic breadcrumbs bar across all dashboard views.
+- **Recursive Template Compilation & Live Preview Engine**:
+  - `POST /api/templates/preview` endpoint with recursive embed resolution (`{{embed "uuid"}}`) and cycle detection.
+  - Cross-embed placeholder aggregation: template variables list automatically discovers placeholders from all embedded partial templates.
+  - Three preview modes in the Template Editor: **Visual Preview** (with Desktop and Mobile 375px viewport toggles), **Compiled HTML Output Inspector** (with 1-click copy), and **Interactive Test Variables Drawer** (with sample data).
+  - Clear distinction between **Inbuilt System Variables** (clickable 1-click insert tags) and **Discovered Custom Variables** (non-clickable informative badges).
+- **Template Integration Code Snippets Modal**:
+  - Pre-filled code examples in **Client SDK (Node/TS)**, **Fetch (JavaScript)**, and **cURL** for each template with 1-click copy.
+- **UI Revamp & HeroUI Styling**:
+  - Toned-down slate/zinc dark surfaces (`#0b0f19`, `#111827`, `#1e293b`) with ambient mesh background gradients and glassmorphism.
+  - Redesigned sidebar with grouped sections, separators, active glow indicators, and bottom user profile/logout dock.
+- **Comprehensive Test Suite**:
+  - Expanded test coverage to 116 passing tests across 15 test files in `apps/api` and `packages/sdk`.
+
+### Changed
+
+- Enhanced `packages/sdk` (`mail-buddy-sdk`) with `client.auth`, `client.users`, and `client.templates.preview` resources.
+- Modernized all dashboard views and components.
+
+---
 
 ## [0.1.0] - 2026-08-09
 
 ### Added
 
-- **API server** (`apps/api`): Elysia + Drizzle + `bun:sqlite`, compiling to a single executable with the dashboard embedded. Template CRUD with Handlebars placeholder auto-extraction, recursive `{{embed "uuid"}}` resolution with cycle detection, local asset uploads (S3 driver stubbed, not implemented), database-backed API keys with `admin`/`send_only` scopes and optional origin/IP restriction, settings management, per-template/global suppression list with signed one-click unsubscribe links, single + batch/personalized `/api/send` with a SQLite-backed delivery queue and exponential-backoff retry worker.
-- **Dashboard** (`apps/web`): React + Tailwind admin UI - first-run key login, template editor (raw HTML/Handlebars, no visual builder yet), asset manager, Settings (API Keys, SMTP & Storage), Suppression List.
-- **Node SDK** (`packages/sdk`, `mail-buddy-sdk`): typed client covering every API endpoint, zero runtime dependencies, dual ESM/CJS build.
-- **Test suite**: 94 tests in `apps/api` (unit + integration against an in-memory DB) and 10 in `packages/sdk`.
-- **Claude Code skill** (`.claude/skills/mail-buddy`) documenting integration for AI-assisted development.
-- Project documentation: `project-plan.md` (architecture/schema/API spec), `README.md` (with an auto-refreshing contributors badge via contrib.rocks), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates, this `CHANGELOG.md`, and MIT `LICENSE` (root and `packages/sdk`).
-- CI: `.github/workflows/ci.yml` runs typechecks, tests, and a dashboard build on every PR and branch push. `.github/workflows/build-and-release.yml` re-runs that gate on every push to `main` (publishing a rolling `latest` pre-release) and on `v*.*.*` tags (publishing a permanent, versioned release marked "Latest release", with cross-platform binaries for Linux x64/arm64, macOS x64/arm64, and Windows x64). `.github/workflows/sdk-publish.yml` publishes `mail-buddy-sdk` to npm on `sdk-v*.*.*` tags, setting the package version from the tag. All three have status badges in `README.md`.
-- `apps/api/.env.example` documenting every configurable environment variable, and confirmation (verified end-to-end) that Bun's compiled binary auto-loads `.env` from its working directory with no extra setup.
-
-### Known gaps
-
-- S3 storage driver not implemented (`local` only).
-- No visual drag-and-drop template builder yet (raw HTML/Handlebars editor only).
+- **API server** (`apps/api`): Elysia + Drizzle + `bun:sqlite`, compiling to a single executable with the dashboard embedded.
+- **Dashboard** (`apps/web`): React + Tailwind admin UI.
+- **Node SDK** (`packages/sdk`, `mail-buddy-sdk`): Typed client covering initial API endpoints.
+- **Test suite**: 94 tests in `apps/api` and 10 in `packages/sdk`.
 
 [Unreleased]: https://github.com/shakthizen/mail-buddy/compare/v0.1.0...main
 [0.1.0]: https://github.com/shakthizen/mail-buddy/releases/tag/v0.1.0

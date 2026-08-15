@@ -1,20 +1,32 @@
-import { saveLocalFile, deleteLocalFile } from './local';
-import { env } from '../env';
+import { saveLocalFile, deleteLocalFile, readLocalFile } from './local';
+import { saveS3File, deleteS3File, readS3File } from './s3';
+import { getStorageConfig } from '../lib/appSettings';
 
-const provider = env.STORAGE_PROVIDER;
-
-/** S3 support is documented in project-plan.md section 1.5 but not yet implemented -
- * follow-up work. Local storage is fully implemented and is the default driver. */
-export async function saveFile(filename: string, data: Uint8Array): Promise<string> {
+export async function saveFile(
+  filename: string,
+  data: Uint8Array,
+  mimeType?: string,
+): Promise<string> {
+  const { provider } = getStorageConfig();
   if (provider === 's3') {
-    throw new Error('STORAGE_PROVIDER=s3 is not implemented yet - use the local driver for now');
+    return saveS3File(filename, data, mimeType);
   }
   return saveLocalFile(filename, data);
 }
 
 export async function deleteFile(filename: string): Promise<void> {
+  const { provider } = getStorageConfig();
   if (provider === 's3') {
-    throw new Error('STORAGE_PROVIDER=s3 is not implemented yet - use the local driver for now');
+    return deleteS3File(filename);
   }
   return deleteLocalFile(filename);
 }
+
+export async function readFile(filename: string) {
+  const { provider } = getStorageConfig();
+  if (provider === 's3') {
+    return readS3File(filename);
+  }
+  return readLocalFile(filename);
+}
+

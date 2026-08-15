@@ -4,6 +4,8 @@ import type {
   CreateApiKeyInput,
   CreateApiKeyResponse,
   SettingsPayload,
+  TestEmailResponse,
+  TestStorageResponse,
   UpdateApiKeyInput,
   UpdateSettingsInput,
 } from '../types';
@@ -13,6 +15,10 @@ export function createSettingsResource(request: HttpClient) {
     get: () => request<SettingsPayload>({ path: '/api/settings' }),
     update: (data: UpdateSettingsInput) =>
       request<SettingsPayload>({ method: 'PUT', path: '/api/settings', body: data }),
+    testEmail: (data: { to: string }) =>
+      request<TestEmailResponse>({ method: 'POST', path: '/api/settings/test-email', body: data }),
+    testStorage: () =>
+      request<TestStorageResponse>({ method: 'POST', path: '/api/settings/test-storage' }),
   };
 }
 

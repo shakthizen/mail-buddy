@@ -9,6 +9,8 @@ import { assetRoutes, publicUploadRoutes } from './routes/assets';
 import { settingsRoutes } from './routes/settings';
 import { suppressionRoutes, publicUnsubscribeRoutes } from './routes/suppressions';
 import { sendRoutes } from './routes/send';
+import { authRoutes } from './routes/auth';
+import { usersRoutes } from './routes/users';
 import { startDeliveryWorker } from './worker/deliveryWorker';
 import { webAssets } from './webAssets.generated';
 
@@ -19,6 +21,8 @@ const hasWebBuild = Object.keys(webAssets).length > 0;
 
 const app = new Elysia()
   .use(healthRoutes)
+  .use(authRoutes)
+  .use(usersRoutes)
   .use(publicUploadRoutes)
   .use(publicUnsubscribeRoutes)
   .use(templateRoutes)

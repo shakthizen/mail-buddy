@@ -38,24 +38,21 @@ graph TD
 * **Single-Binary UI + API:** The React SPA Dashboard is built at compile time and embedded directly into the compiled Elysia binary, which serves it alongside the REST API from the same origin. There is no separate dashboard deployment, no CORS setup, and no Docker packaging required — you run one executable and get both the admin UI and the API.
 * **Dynamic Template Embedding (`{{embed "uuid"}}`):** Mail-Buddy allows modular component design. Users can nest templates dynamically in Handlebars, automatically merging placeholders and required variables recursively.
 
+### Authentication & User Management
+* **Dual Auth Model:** Supports both scoped API Keys (`admin`, `send_only`) for backend microservices and User Sessions for team members.
+* **Onboarding & Team Users:** First-run wizard creates the primary administrator. Public registration is disabled; logged-in administrators can create additional team members with generated passwords.
+
 ### Non-Goals
 To keep scope tight, Mail-Buddy explicitly does **not** aim to be:
-* **A multi-user / RBAC system.** Access control is API keys with two scopes (`admin`, `send_only`) — there are no user accounts, roles, or permission trees.
+* **A complex enterprise IAM/SAML directory.** Access control is clean and focused (`admin`, `member` user roles and `admin`, `send_only` API keys).
 * **An audience / list management platform.** There are no contacts, lists, or segments. Mail-Buddy tracks a single per-template (or global) **suppression list** so it never re-emails someone who opted out — but the caller's own backend owns who is actually on a mailing list and what their attributes are.
 * **An analytics/tracking platform.** No open/click tracking, no bounce webhook processing.
 * **A CMS with template versioning.** Templates are edited in place; there's no revision history or rollback.
 
 ### Storage Strategy (Local vs. S3)
-To ensure stateless container friendliness (e.g. hosting on Fly.io, Heroku, or ECS where local filesystems can be ephemeral), Mail-Buddy supports two storage drivers configured via environment variables:
+To ensure stateless container friendliness (e.g. hosting on Fly.io, Heroku, or ECS where local filesystems can be ephemeral), Mail-Buddy supports two storage drivers configured dynamically via the dashboard or environment variables:
 1. **`local` (Default):** Uploaded images are stored in a local directory (`./uploads`) alongside the binary.
-2. **`s3`:** Uploaded images are uploaded directly to an S3-compatible bucket.
-   * **Required Credentials & Settings:**
-     * `STORAGE_PROVIDER=s3`
-     * `S3_BUCKET_NAME` (The S3 bucket identifier)
-     * `S3_ACCESS_KEY_ID` (AWS Access Key or provider counterpart)
-     * `S3_SECRET_ACCESS_KEY` (AWS Secret Key or provider counterpart)
-     * `S3_REGION` (e.g., `us-east-1`)
-     * `S3_ENDPOINT` (Optional, for custom endpoints like Cloudflare R2, MinIO, or DigitalOcean Spaces)
+2. **`s3`:** Uploaded images are stored directly in an Amazon S3 or S3-compatible bucket (AWS S3, LocalStack, MinIO, Cloudflare R2, DigitalOcean Spaces) with optional path-style addressing and live connection testing.
 
 ---
 

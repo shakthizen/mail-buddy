@@ -61,6 +61,52 @@ describe('settings', () => {
     expect(body.smtp.password).toBe('••••••••'); // still masked, meaning the real secret survived unchanged
   });
 
+  test('put updates full s3 config and masks secret access key', async () => {
+    const app = buildTestApp();
+    const { plaintext } = seedApiKey({ scope: 'admin' });
+    await jsonRequest(app, 'PUT', '/api/settings', {
+      headers: authHeaders(plaintext),
+      body: {
+        storage: {
+          provider: 's3',
+          s3BucketName: 'my-custom-bucket',
+          s3Region: 'eu-central-1',
+          s3AccessKeyId: 'MYACCESSKEY',
+          s3SecretAccessKey: 'MYSECRETKEY123',
+          s3ForcePathStyle: true,
+        },
+        smtp: {
+          fromAddress: 'notifications@example.com',
+          fromName: 'Example Notifications',
+        },
+        general: {
+          publicUrl: 'https://mail.example.com',
+        },
+      },
+    });
+
+    const { body } = await jsonRequest(app, 'GET', '/api/settings', { headers: authHeaders(plaintext) });
+    expect(body.storage.provider).toBe('s3');
+    expect(body.storage.s3BucketName).toBe('my-custom-bucket');
+    expect(body.storage.s3Region).toBe('eu-central-1');
+    expect(body.storage.s3AccessKeyId).toBe('MYACCESSKEY');
+    expect(body.storage.s3SecretAccessKey).toBe('••••••••');
+    expect(body.storage.s3ForcePathStyle).toBe(true);
+    expect(body.smtp.fromAddress).toBe('notifications@example.com');
+    expect(body.smtp.fromName).toBe('Example Notifications');
+    expect(body.general.publicUrl).toBe('https://mail.example.com');
+  });
+
+  test('POST /api/settings/test-storage returns ok for local storage', async () => {
+    const app = buildTestApp();
+    const { plaintext } = seedApiKey({ scope: 'admin' });
+    const { status, body } = await jsonRequest(app, 'POST', '/api/settings/test-storage', {
+      headers: authHeaders(plaintext),
+    });
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+  });
+
   test('send_only key cannot read settings', async () => {
     const app = buildTestApp();
     const { plaintext } = seedApiKey({ scope: 'send_only' });

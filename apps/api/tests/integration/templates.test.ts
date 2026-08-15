@@ -119,4 +119,93 @@ describe('templates CRUD', () => {
     });
     expect(status).toBe(403);
   });
+
+  test('create and update extract placeholders recursively from embedded templates', async () => {
+    const app = buildTestApp();
+    const { plaintext } = seedApiKey({ scope: 'admin' });
+
+    // 1. Create a child header template with variables `site_title` and `user_avatar`
+    const headerRes = await jsonRequest(app, 'POST', '/api/templates', {
+      headers: authHeaders(plaintext),
+      body: {
+        name: 'Header Partial',
+        htmlContent: '<header><h1>{{site_title}}</h1><img src="{{user_avatar}}"/></header>',
+      },
+    });
+    expect(headerRes.status).toBe(200);
+    const headerId = headerRes.body.id;
+
+    // 2. Create parent template embedding header and using `order_id`
+    const parentRes = await jsonRequest(app, 'POST', '/api/templates', {
+      headers: authHeaders(plaintext),
+      body: {
+        name: 'Receipt Email',
+        htmlContent: `{{embed "${headerId}"}}\n<main><p>Order #{{order_id}}</p></main>`,
+      },
+    });
+    expect(parentRes.status).toBe(200);
+    // Should include placeholders from both parent and child template!
+    expect(parentRes.body.placeholders.sort()).toEqual(['order_id', 'site_title', 'user_avatar']);
+  });
+
+  test('POST /api/templates/preview resolves embedded templates and compiles variables', async () => {
+    const app = buildTestApp();
+    const { plaintext } = seedApiKey({ scope: 'admin' });
+
+    // Create a partial template
+    const header = await jsonRequest(app, 'POST', '/api/templates', {
+      headers: authHeaders(plaintext),
+      body: {
+        name: 'Brand Header',
+        htmlContent: '<header><h1>{{brand_name}}</h1></header>',
+      },
+    });
+
+    // Preview a template embedding the header
+    const previewRes = await jsonRequest(app, 'POST', '/api/templates/preview', {
+      headers: authHeaders(plaintext),
+      body: {
+        htmlContent: `{{embed "${header.body.id}"}}\n<p>Hello {{username}}</p>`,
+        variables: {
+          brand_name: 'Acme Corp',
+          username: 'Jane Doe',
+        },
+      },
+    });
+
+    expect(previewRes.status).toBe(200);
+    expect(previewRes.body.renderedHtml).toContain('<h1>Acme Corp</h1>');
+    expect(previewRes.body.renderedHtml).toContain('<p>Hello Jane Doe</p>');
+    expect(previewRes.body.placeholders.sort()).toEqual(['brand_name', 'username']);
+    expect(previewRes.body.embeds).toHaveLength(1);
+    expect(previewRes.body.embeds[0].id).toBe(header.body.id);
+  });
+
+  test('POST /api/templates/preview returns 400 on circular embed cycle', async () => {
+    const app = buildTestApp();
+    const { plaintext } = seedApiKey({ scope: 'admin' });
+
+    const t1Id = crypto.randomUUID();
+    const t2Id = crypto.randomUUID();
+
+    // Create t1 embedding t2
+    await jsonRequest(app, 'POST', '/api/templates', {
+      headers: authHeaders(plaintext),
+      body: {
+        name: 'T1',
+        htmlContent: `{{embed "${t2Id}"}}`,
+      },
+    });
+
+    // Previewing t2 embedding t1 directly
+    const previewRes = await jsonRequest(app, 'POST', '/api/templates/preview', {
+      headers: authHeaders(plaintext),
+      body: {
+        htmlContent: `{{embed "${t1Id}"}}`,
+      },
+    });
+
+    expect(previewRes.status).toBe(400);
+    expect(previewRes.body.error).toBe('compilation_error');
+  });
 });

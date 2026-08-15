@@ -22,7 +22,7 @@ export interface RequestOptions {
 
 export type HttpClient = <T>(options: RequestOptions) => Promise<T>;
 
-export function createHttpClient(baseUrl: string, apiKey: string, fetchImpl: typeof fetch): HttpClient {
+export function createHttpClient(baseUrl: string, apiKey: string | undefined, fetchImpl: typeof fetch): HttpClient {
   return async function request<T>(options: RequestOptions): Promise<T> {
     const url = new URL(options.path, baseUrl);
     if (options.query) {
@@ -31,7 +31,7 @@ export function createHttpClient(baseUrl: string, apiKey: string, fetchImpl: typ
       }
     }
 
-    const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
+    const headers: Record<string, string> = apiKey ? { Authorization: `Bearer ${apiKey}` } : {};
     let body: FormData | string | undefined;
     if (options.formData) {
       body = options.formData;

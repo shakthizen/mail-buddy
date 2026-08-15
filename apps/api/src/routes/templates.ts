@@ -1,9 +1,15 @@
 import { Elysia, t } from 'elysia';
+import Handlebars from 'handlebars';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import { templates } from '../db/schema';
 import { authPlugin, requireAdmin } from '../auth/middleware';
-import { extractPlaceholders } from '../lib/handlebars';
+import {
+  extractPlaceholders,
+  extractResolvedPlaceholders,
+  resolveEmbedsWithMetadata,
+  generateDefaultSampleVariables,
+} from '../lib/handlebars';
 import { parsePagination } from '../lib/pagination';
 
 function serialize(row: typeof templates.$inferSelect) {
@@ -27,6 +33,45 @@ export const templateRoutes = new Elysia({ prefix: '/api/templates' })
       }),
     },
   )
+  .post(
+    '/preview',
+    async ({ body, set }) => {
+      try {
+        const { resolvedHtml, embeds } = await resolveEmbedsWithMetadata(body.htmlContent);
+        const placeholders = extractPlaceholders(resolvedHtml);
+
+        // Generate realistic defaults for any placeholders not explicitly provided
+        const defaultVars = generateDefaultSampleVariables(placeholders);
+        const mergedVariables = {
+          ...defaultVars,
+          ...(body.variables ?? {}),
+        };
+
+        const compiled = Handlebars.compile(resolvedHtml, { noEscape: false });
+        const renderedHtml = compiled(mergedVariables);
+
+        return {
+          renderedHtml,
+          resolvedTemplate: resolvedHtml,
+          placeholders,
+          embeds,
+          variablesUsed: mergedVariables,
+        };
+      } catch (err: any) {
+        set.status = 400;
+        return {
+          error: 'compilation_error',
+          message: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    {
+      body: t.Object({
+        htmlContent: t.String(),
+        variables: t.Optional(t.Record(t.String(), t.Any())),
+      }),
+    },
+  )
   .get('/:id', ({ params, set }) => {
     const row = db.select().from(templates).where(eq(templates.id, params.id)).get();
     if (!row) {
@@ -37,9 +82,9 @@ export const templateRoutes = new Elysia({ prefix: '/api/templates' })
   })
   .post(
     '/',
-    ({ body }) => {
+    async ({ body }) => {
       const id = crypto.randomUUID();
-      const placeholders = extractPlaceholders(body.htmlContent);
+      const placeholders = await extractResolvedPlaceholders(body.htmlContent);
       const now = new Date().toISOString();
       db.insert(templates)
         .values({
@@ -67,7 +112,7 @@ export const templateRoutes = new Elysia({ prefix: '/api/templates' })
   )
   .put(
     '/:id',
-    ({ params, body, set }) => {
+    async ({ params, body, set }) => {
       const existing = db.select().from(templates).where(eq(templates.id, params.id)).get();
       if (!existing) {
         set.status = 404;
@@ -75,7 +120,7 @@ export const templateRoutes = new Elysia({ prefix: '/api/templates' })
       }
 
       const htmlContent = body.htmlContent ?? existing.htmlContent;
-      const placeholders = extractPlaceholders(htmlContent);
+      const placeholders = await extractResolvedPlaceholders(htmlContent);
 
       db.update(templates)
         .set({

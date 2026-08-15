@@ -7,7 +7,9 @@ import { TemplateEditor } from './pages/TemplateEditor';
 import { Assets } from './pages/Assets';
 import { Suppressions } from './pages/Suppressions';
 import { ApiKeys } from './pages/settings/ApiKeys';
-import { SmtpStorage } from './pages/settings/SmtpStorage';
+import { Smtp } from './pages/settings/Smtp';
+import { Storage } from './pages/settings/Storage';
+import { Users } from './pages/settings/Users';
 
 export default function App() {
   return (
@@ -22,8 +24,10 @@ export default function App() {
             <Route path="/templates/:id" element={<TemplateEditor />} />
             <Route path="/assets" element={<Assets />} />
             <Route path="/suppressions" element={<Suppressions />} />
+            <Route path="/settings/smtp" element={<Smtp />} />
+            <Route path="/settings/storage" element={<Storage />} />
             <Route path="/settings/api-keys" element={<ApiKeys />} />
-            <Route path="/settings/smtp" element={<SmtpStorage />} />
+            <Route path="/settings/users" element={<Users />} />
           </Route>
         </Routes>
       </BrowserRouter>
